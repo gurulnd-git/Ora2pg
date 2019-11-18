@@ -1,0 +1,91 @@
+ORACLE TO POSTGRES MIGRATION
+--------------------------
+
+- ora2pg Perl software is required to install Perl on Windows. For this we have established Strawberry Perl.
+
+- ora2pg Oracle Client was installed because it requires Oracle client to connect to Oracle.
+
+- We updated ora2pg.conf to move the HR schema.
+
+- There are initial settings for ora2pg at https://stackoverflow.com/questions/47345373/how-to-install-ora2pg-on-windows-7.
+
+
+
+When installing ora2pg:
+
+cd c: \ ora2pg
+
+perl Makefile.PL
+
+gmake && gmake install
+
+Set the environment variables:
+Set ORACLE_HOME = C: \ oraclexe \ app \ oracle \ product \ 11.2.0 \ server
+
+Set LD_LIBRARY_PATH = C: \ oraclexe \ app \ oracle \ product \ 11.2.0 \ server \ lib
+
+
+
+Install DBD Oracle libraries (internet connection is required when installing):
+
+perl -MCPAN -e "install DBD :: Oracle"
+
+
+TRANSPORTATION STEPS:
+-------------------------------------------------- --------
+
+Important: We copied the ora2pg.conf file to the c: \ ora2pg directory.
+We made the file name ora2pg.conf.dist.
+
+ora2pg --project_base c: \ ora2pg --init_project hrtest
+
+cd hrtest /
+
+(We copied ora2pg.conf.dist into the hrtest directory as ora2pg.conf.)
+
+set PGPASSWORD = postgres
+
+(If Strawberry Perl 64-bit is installed, Oracle Client has to be 64-bit. If it is 32-bit, the other one will be 32-bit.)
+
+ora2pg -c ora2pg.conf -t TABLE -o tables.sql -b schema / tables /
+
+psql -h localhost -d HRDB -U postgres -p 5432 -a -q -f schema / tables / tables.sql
+
+ora2pg -c ora2pg.conf -t SEQUENCE -o sequence.sql -b schema / sequences /
+
+psql -h localhost -d HRDB -U postgres -p 5432 -a -q -f schema / sequences / sequence.sql
+
+
+
+ora2pg -c ora2pg.conf -t PROCEDURE -o procedure.sql -b schema / procedures
+
+psql -h localhost -d HRDB -U postgres -p 5432 -a -q -f schema / procedures / procedure.sql
+
+ora2pg -c ora2pg.conf -t FUNCTION -o procedure.sql -b schema / functions
+
+ora2pg -c ora2pg.conf -t PACKAGE -o procedure.sql -b schema / packages
+
+ora2pg -c ora2pg.conf -t VIEW -o view.sql -b schema / views /
+
+psql -h localhost -d HRDB -U postgres -p 5432 -a -q -f schema / views / view.sql
+
+ora2pg -c ora2pg.conf -t GRANT -o grant.sql -b schema / grants /
+
+- The following extension must be loaded for uuid_generate_v4, which corresponds to the sys_guid function in Oracle, before the insert script is executed.
+
+
+(Connect to the database with psql -U postgres and run the extension.)
+- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+ora2pg -c ora2pg.conf -t COPY -o data.sql -b schema / data /
+
+ora2pg -c ora2pg.conf -t INSERT -o data.sql -b schema / data /
+
+
+ora2pg -c ora2pg.conf -t TRIGGER -o trigger.sql -b schema / triggers /
+
+psql -h localhost -d HRDB -U postgres -p 5432 -a -q -f schema / triggers / trigger.sql
+Send feedback
+History
+Saved
+Community
